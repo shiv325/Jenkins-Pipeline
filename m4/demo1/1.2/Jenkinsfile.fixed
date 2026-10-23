@@ -3,6 +3,7 @@ pipeline {
         dockerfile {
             dir 'm4'
             filename 'Dockerfile.sdk'
+            args '-e HOME=/tmp'
         }
     }
     stages {
