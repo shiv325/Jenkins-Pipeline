@@ -1,6 +1,36 @@
-library identifier: 'jenkins-pipeline-demo-library@master', 
-        retriever: modernSCM([$class: 'GitSCMSource', remote: 'https://github.com/sixeyed/jenkins-pipeline-demo-library.git'])
+def image
 
-crossPlatformBuild repoName: 'sixeyed/pi-psod-pipelines',
-                   linuxContext: 'm4', 
-                   windowsContext: 'm4'
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    image = docker.build('shiv325/pi-psod-pipelines:linux-amd64', '--pull -f m4/Dockerfile m4')
+                }
+            }
+        }
+        stage('Smoke Test') {
+            steps {
+                script {
+                    def container = image.run()
+                    container.stop()
+                }
+            }
+        }
+        stage('Push') {
+            steps {
+                withDockerRegistry([credentialsId: 'docker-hub', url: '']) {
+                    script {
+                        image.push()
+                    }
+                }
+            }
+        }
+        stage('Notify') {
+            steps {
+                echo 'https://hub.docker.com/r/shiv325/pi-psod-pipelines'
+            }
+        }
+    }
+}
